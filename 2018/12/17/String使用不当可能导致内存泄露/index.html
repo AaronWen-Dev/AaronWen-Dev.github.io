@@ -87,15 +87,15 @@
 <meta property="og:site_name" content="Aaron&#39;s Blog">
 <meta property="og:description" content="String 使用不当可能导致内存泄露 转载Hollis微信公众号  今天介绍一个String使用不当可能导致内存泄露的问题，主要围绕其subString方法。围绕String和subString也有很多面试题，是比较重要的知识点。 substring(int beginIndex, int endIndex)方法在不同版本的JDK中的实现是不同的。了解他们的区别可以帮助你更好的使用他。为简单起见">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2018/12/17/String使用不当可能导致内存泄露/1.png">
-<meta property="og:image" content="http://yoursite.com/2018/12/17/String使用不当可能导致内存泄露/2.png">
-<meta property="og:image" content="http://yoursite.com/2018/12/17/String使用不当可能导致内存泄露/3.png">
-<meta property="og:image" content="http://yoursite.com/2018/12/17/String使用不当可能导致内存泄露/4.png">
+<meta property="og:image" content="http://yoursite.com/2018/12/17/String使用不当可能导致内存泄露/String使用不当可能导致内存泄露/1.png">
+<meta property="og:image" content="http://yoursite.com/2018/12/17/String使用不当可能导致内存泄露/String使用不当可能导致内存泄露/2.png">
+<meta property="og:image" content="http://yoursite.com/2018/12/17/String使用不当可能导致内存泄露/String使用不当可能导致内存泄露/3.png">
+<meta property="og:image" content="http://yoursite.com/2018/12/17/String使用不当可能导致内存泄露/String使用不当可能导致内存泄露/4.png">
 <meta property="og:updated_time" content="2018-12-17T09:01:47.520Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="String使用不当可能导致内存泄露">
 <meta name="twitter:description" content="String 使用不当可能导致内存泄露 转载Hollis微信公众号  今天介绍一个String使用不当可能导致内存泄露的问题，主要围绕其subString方法。围绕String和subString也有很多面试题，是比较重要的知识点。 substring(int beginIndex, int endIndex)方法在不同版本的JDK中的实现是不同的。了解他们的区别可以帮助你更好的使用他。为简单起见">
-<meta name="twitter:image" content="http://yoursite.com/2018/12/17/String使用不当可能导致内存泄露/1.png">
+<meta name="twitter:image" content="http://yoursite.com/2018/12/17/String使用不当可能导致内存泄露/String使用不当可能导致内存泄露/1.png">
 
 
 
@@ -376,7 +376,7 @@
 </ul>
 </blockquote>
 <p>你可能知道，因为x是不可变的，当使用<strong>x.substring(1,3)</strong>对x赋值的时候，它会指向一个全新的字符串：</p>
-<p><img src="/2018/12/17/String使用不当可能导致内存泄露/1.png" alt="图1"></p>
+<p><img src="String使用不当可能导致内存泄露/1.png" alt="图1"></p>
 <p>然而，这个图不是完全正确的表示堆中发生的事情。因为在jdk6 和 jdk7中调用substring时发生的事情并不一样。</p>
 <blockquote>
 <ul>
@@ -385,7 +385,7 @@
 </blockquote>
 <p>String是通过字符数组实现的。在jdk 6 中，String类包含三个成员变量：<strong>char value[]， int offset，int count。</strong>他们分别用来存储真正的字符数组，数组的第一个位置索引以及字符串中包含的字符个数。</p>
 <p>当调用substring方法的时候，会创建一个新的string对象，但是这个string的值仍然指向堆中的同一个字符数组。这两个对象中只有count和offset 的值是不同的。</p>
-<p><img src="/2018/12/17/String使用不当可能导致内存泄露/2.png" alt="图2"></p>
+<p><img src="String使用不当可能导致内存泄露/2.png" alt="图2"></p>
 <p>下面是证明上说观点的Java源码中的关键代码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">//JDK 6</span><br><span class="line">String(int offset, int count, char value[]) &#123;</span><br><span class="line">    this.value = value;</span><br><span class="line">    this.offset = offset;</span><br><span class="line">    this.count = count;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public String substring(int beginIndex, int endIndex) &#123;</span><br><span class="line">    //check boundary</span><br><span class="line">    return  new String(offset + beginIndex, endIndex - beginIndex, value);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <blockquote>
 <ul>
@@ -396,7 +396,7 @@
 <p>这可能导致性能问题，因为你需要的只是一小段字符序列，但是你却引用了整个字符串（因为这个非常长的字符数组一直在被引用，所以无法被回收，就可能导致内存泄露）。</p>
 <p>在JDK 6中，一般用以下方式来解决该问题，原理其实就是生成一个新的字符串并引用他。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">x = x.substring(x, y) + &quot;&quot;</span><br></pre></td></tr></table></figure></p>
 <p>关于JDK 6中subString的使用不当会导致内存系列已经被官方记录在Java Bug Database中：</p>
-<p><img src="/2018/12/17/String使用不当可能导致内存泄露/3.png" alt="图3"></p>
+<p><img src="String使用不当可能导致内存泄露/3.png" alt="图3"></p>
 <blockquote>
 <p><em>内存泄露：在计算机科学中，内存泄漏指由于疏忽或错误造成程序未能释放已经不再使用的内存。 内存泄漏并非指内存在物理上的消失，而是应用程序分配某段内存后，由于设计错误，导致在释放该段内存之前就失去了对该段内存的控制，从而造成了内存的浪费。</em></p>
 </blockquote>
@@ -406,7 +406,7 @@
 </ul>
 </blockquote>
 <p>上面提到的问题，在jdk 7中得到解决。在jdk 7 中，substring方法会在堆内存中创建一个新的数组。</p>
-<p><img src="/2018/12/17/String使用不当可能导致内存泄露/4.png" alt="图4"></p>
+<p><img src="String使用不当可能导致内存泄露/4.png" alt="图4"></p>
 <p>Java源码中关于这部分的主要代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">//JDK 7</span><br><span class="line">public String(char value[], int offset, int count) &#123;</span><br><span class="line">    //check boundary</span><br><span class="line">    this.value = Arrays.copyOfRange(value, offset, offset + count);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public String substring(int beginIndex, int endIndex) &#123;</span><br><span class="line">    //check boundary</span><br><span class="line">    int subLen = endIndex - beginIndex;</span><br><span class="line">    return new String(value, beginIndex, subLen);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>以上是JDK 7中的subString方法，其使用new String创建了一个新字符串，避免对老字符串的引用。从而解决了内存泄露问题。</p>
 <p>所以，如果你的生产环境中使用的JDK版本小于1.7，当你使用String的subString方法时一定要注意，避免内存泄露。</p>
